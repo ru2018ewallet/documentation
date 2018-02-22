@@ -1,0 +1,59 @@
+digraph {
+  rankdir="LR"
+  newrank="true"
+  
+  // empty:: before we get the card; the operating system is installed
+  // pre:: pre-personalization; our applet is already installed
+  // use:: personalization took place, the card has an 'owner'
+  // die:: the card can not be used further
+  // mgmt?:: management states which can only be reached by a special terminal
+  // lock:: maybe it should be posible to lock the functionality.
+  // Question:: Shall un-locking be possible?
+  // Question:: Shall the user be able to initialize EOL?
+  
+  empty -> pre
+  pre -> mgmt1
+  mgmt1 -> {pre use}
+  use -> {mgmt2 lock}
+  mgmt2 -> {use die lock}
+  lock -> mgmt2
+
+  empty [color="#a6a6a6"]
+  mgmt1 [color="#ff0000"]
+  mgmt2 [color="#ff0000"]
+  pre [color="#0033cc",penwidth=3]
+  use [color="#0033cc",penwidth=3]
+  die [color="#0033cc",penwidth=3]
+
+  subgraph cluster_0 {
+    label="OS completed"
+    rank="same"
+    rankdir="TB"
+    empty
+  }
+
+  subgraph cluster_1 {
+    label="pre-personalization"
+    rank="same"
+    rankdir="TB"
+    pre
+    mgmt1
+  }
+
+  subgraph cluster_2 {
+    label="personalized"
+    rank="same"
+    rankdir="TB"
+    use
+    mgmt2
+    lock
+  }
+
+  subgraph cluster_3 {
+    label="end-of-life"
+    rank="same"
+    rankdir="TB"
+    die
+  }
+
+}
