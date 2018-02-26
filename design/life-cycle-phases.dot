@@ -11,11 +11,11 @@ digraph {
   // Question:: Shall un-locking be possible?
   // Question:: Shall the user be able to initialize EOL?
   
-  empty -> pre
+  empty -> pre [label="initialization"]
   pre -> mgmt1
-  mgmt1 -> {pre use}
+  mgmt1 -> pre; mgmt1 -> use [label="personalization"]; 
   use -> {mgmt2 lock}
-  mgmt2 -> {use die lock}
+  mgmt2 -> {use lock}; mgmt2 -> die [label="termination"];
   lock -> mgmt2
 
   empty [color="#a6a6a6"]
@@ -33,7 +33,7 @@ digraph {
   }
 
   subgraph cluster_1 {
-    label="pre-personalization"
+    label="initialized\npre-personalization"
     rank="same"
     rankdir="TB"
     pre
