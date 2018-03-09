@@ -1,0 +1,36 @@
+msc {
+    hscale = 1.3;
+    c [label="C\nCard"],
+    t [label="T\nTerminal(Payment)"],
+    p [label="P\nPayment Provider"];
+
+    # nC, nT, nP == nonceCard, nonceTerminal, noncePaymentprovider
+    # cID, tID == CardID, TerminalID
+    # b a byte which encodes the message type. Every message type has a unique byte; layout: 1: request/response; 3 action; 4 message ==> (2, 8 types, 16 messages inside)
+    # sk(X), pk(X) secret (private) key of X, public key of X
+    # tCtr transaction counter: the card increases this every time it communicates with the server (it is technically unnecessary, even if P can not detect replay attacks, C always can and then would not forward the message)
+    # datetime is the datetime T provides. It is checked by P, since C can not. It is a static value, it does not get replaces/updated during protocol execution. 
+    
+    c<-t [label="① b, nP"];
+    c->t [label="② b, nC"];
+
+    c<-t [label="③ b, {|datetime, tID, amount, recipient, nC, nP|}sk(T)"];
+    |||;|||;
+    c->t [label="④ b, {| {|③, tCtr, pk(C)|}sk(C) |}pk(P)"];
+    # T can not read/modify, just forwards to P
+    
+    t->p [label="⑤ b, {| {|③, tCtr, pk(C)|}sk(C) |}pk(P)"];
+    # after receiving ⑤: P checks whether cID, tID are on a white list and maybe whether recipient is not blacklisted; check tCtr is higher than the one received last (so P can detect replay attacks, but tehcnically this is not necessary because C could detect them anyway - but why should we sign something bad in the first place). P either answers with ⑤ (happy flow) or with an error message of the same length
+    
+    t<-p [label="⑥ b, {| {|nP, nT, datetime, tID, amount, recipient|}sk(P), {| nC, nP, tCtr |} |}pk(C)"];
+    c<-t [label="⑦ b, {| {|nP, nT, datetime, tID, amount, recipient|}sk(P), {| nC, nP, tCtr |} |}pk(C)"];
+    |||;|||;
+    
+    # aftrer receiving ⑦ C: C basically has a statement signed by P that P will make sure that money is transfered. Idea here: T trusts P; P trusts C and vice versa. Now C checks whether the action can be performed (overflow, negative amount, ....) and then calculates new balance and goes into transaction mode
+    c abox c [label="enter critical transaction"];
+    
+    c->t [label="⑧ b, {|nP, nT, datetime, tID, amount, recipient|}sk(P)"];
+    # after receiving ⑧ T: T has a guarantuee of P that it gets money. So now P has all the risk.
+    c rbox c [label="-amount"], t rbox t [label="+amount"];
+
+}

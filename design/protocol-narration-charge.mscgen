@@ -1,0 +1,32 @@
+msc {
+    hscale = 1.3;
+    c [label="C\nCard"],
+    t [label="T Terminal(Charge)"],
+    p [label="P\nPayment Provider"];
+
+    # nC, nT, nP == nonceCard, nonceTerminal, noncePaymentprovider
+    # cID, tID == CardID, TerminalID
+    # b a byte which encodes the message type. Every message type has a unique byte; layout: 1: request/response; 3 action; 4 message ==> (2, 8 types, 16 messages inside)
+    # sk(X), pk(X) secret (private) key of X, public key of X
+    # tCtr transaction counter: the card increases this every time it communicates with the server (it is technically unnecessary, even if P can not detect replay attacks, C always can and then would not forward the message)
+    # datetime is the datetime T provides. It is checked by P, since C can not. It is a static value, it does not get replaces/updated during protocol execution. 
+    
+    c<-t [label="① b(charge), nP"];
+    |||;
+    c->t [label="② b(cok), nC, {| {|cID, tCtr|}sk(C) |}pk(P)"];
+    
+    t->p [label="③ b, {|datetime, tID, amount, datetime, nC, nP, {|cID, tCtr|}sk(C) |}pk(P) |}sk(T) "]; # basically extends and forwards
+    # after receiving ④: P checks whether cID, tID are on a white list and maybe whether recipient is not blacklisted; check tCtr is higher than the one received last (so P can detect replay attacks, but tehcnically this is not necessary because C could detect them anyway - but why should we sign something bad in the first place). P either answers with ⑤ (happy flow) or with an error message of the same length
+    t<-p [label="④ b, {| {|tID, amount, datetime, nC, nP|}sk(P), {|nC, nP, tCtr|}sk(P) }pk(C)"];
+    # t forwards the message without being able to read 
+    c<-t [label="⑤ b, {| {|tID, amount, datetime, nC, nP|}sk(P), {|nC, nP, tCtr|}sk(P) |}pk(C)"];
+    
+    # after receiving ④: c: check conrrectness of both nonces, amount and tID, if all are valid, forward signed message (happy flow) else send error message of same length
+    |||;
+    c abox c [label="enter critical transaction"];
+    c->t [label="⑥ b, nC, nP, { {|nP, nT, datetime, tID, amount|}sk(P)"];
+    # after receiving ⑥ T: t has a guarantee of P that C got charged. This is important, because T ha to take the money from somewhere and they want to have a guarantee that it arrived safely. Anyway we transparently showed that we took the money and however gave it to T can receive a prove of the amount of money we cosumed and added to C 
+    c rbox c [label="+amount"],
+    t rbox t [label="-amount"];
+
+}

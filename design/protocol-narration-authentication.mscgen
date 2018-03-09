@@ -1,0 +1,35 @@
+msc {
+    hscale=1.3;
+    c [label="C\nCard"],
+    t [label="T\nTerminal(X)"],
+    p [label="P\nPayment Provider"];
+
+    # nC, nT, nP == nonceCard, nonceTerminal, noncePaymentprovider
+    # cID, tID == CardID, TerminalID
+    # b a byte which encodes the message type. Every message type has a unique byte; layout: 1: request/response; 3 action; 4 message ==> (2, 8 types, 16 messages inside)
+    # sk(X), pk(X) secret (private) key of X, public key of X
+    # tCtr transaction counter: the card increases this every time it communicates with the server (it is technically unnecessary, even if P can not detect replay attacks, C always can and then would not forward the message)
+
+    c<=>t [label="JC Platform provides Key agreement protocol\n\n(derive shared secrets for a secure channel)"];
+    ...;
+    c rbox p [label="External Authentication"];
+    c<-t [label="① b, {| pk(T) |}sk(P)"];
+    c->t [label="② b, nC"];
+    c<-t [label="③ b, {| nC |}sk(T) "];
+    c->t [label="④ b"];
+    # at the end C knows that T was at leat once a valid terminal. During Internal Authentication P can provide information about the validity of T.
+    ...;
+
+    c rbox p [label="Internal Authentication"];
+    c<-t [label="⑤ b, {| nT, terminalID |}sk(T)"];
+    c->p [label="⑥ b, {| {|nT, nC, tCtr, pk(C)|}sk(C) |}pk(P)"];
+    c<-p [label="⑦ b, {| {|nT, nP|}sk(P) |}pk(C)"];
+    c->t [label="⑧ b, {| nT, nP |}sk(P)"];
+    # note that message ③ and ⑤ can be combined and message ④ be skipped. This would also bind both authentications together.
+    ...;
+
+    c rbox p [label="User authentiation\n(over secure channel)"];
+    c<-t [label="① b, PIN"];
+    # afte receiving C: check whether P equals user PIN (with Platform provided functionality. If so continue with following message (happy flow), else send an error message of same length
+    c->t [label="② b"];
+}
