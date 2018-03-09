@@ -1,29 +1,27 @@
 digraph {
   rankdir="LR"
   newrank="true"
+
+#// personalize: generate keys
   
-  // empty:: before we get the card; the operating system is installed
-  // pre:: pre-personalization; our applet is already installed
-  // use:: personalization took place, the card has an 'owner'
-  // die:: the card can not be used further
-  // mgmt?:: management states which can only be reached by a special terminal
-  // lock:: maybe it should be posible to lock the functionality.
-  // Question:: Shall un-locking be possible?
-  // Question:: Shall the user be able to initialize EOL?
-  
-  empty -> pre [label="initialization"]
-  pre -> mgmt1
-  mgmt1 -> pre; mgmt1 -> use [label="personalization"]; 
-  use -> {mgmt2 lock}
-  mgmt2 -> {use lock}; mgmt2 -> die [label="termination"];
-  lock -> mgmt2
+  empty -> pre
+  pre -> use [label="T(M):personalize()"]
+
+  use -> lock [label="lock()\n\n"]
+  use -> use [label="balance()"]
+  use -> use [label="T(C):history()"]
+  use -> use [label="T(P):pay()"]
+  use -> use [label="T(C):charge()"]
+
+  lock -> lock [label="T(M):history()"]
+  lock -> lock [label="T(M):balance()"]
+  lock -> die [label="T(M):kill()"]
 
   empty [color="#a6a6a6"]
-  mgmt1 [color="#ff0000"]
-  mgmt2 [color="#ff0000"]
   pre [color="#0033cc",penwidth=3]
   use [color="#0033cc",penwidth=3]
-  die [color="#0033cc",penwidth=3]
+  lock [color="#cc0000",penwidth=3]
+  die [color="#cc0000",penwidth=3]
 
   subgraph cluster_0 {
     label="OS completed"
@@ -37,7 +35,6 @@ digraph {
     rank="same"
     rankdir="TB"
     pre
-    mgmt1
   }
 
   subgraph cluster_2 {
@@ -45,7 +42,6 @@ digraph {
     rank="same"
     rankdir="TB"
     use
-    mgmt2
     lock
   }
 
